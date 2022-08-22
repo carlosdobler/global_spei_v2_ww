@@ -1,5 +1,5 @@
 
-dom <- c("AFR", "AUS", "CAM", "CAS", "EAS", "EUR", "NAM", "SAM", "SEA", "WAS")[6]
+dom <- c("AFR", "AUS", "CAM", "CAS", "EAS", "EUR", "NAM", "SAM", "SEA", "WAS")[2]
 
 
 # source("~/00-mount.R")
@@ -248,9 +248,9 @@ for(mod in unique(tb_files$model)){                                             
   
   pwalk(st_drop_geometry(chunks_ind), function(lon_ch, lat_ch, r, ...){
     
-    # r <- chunks_ind$r[18]
-    # lon_ch <- chunks_ind$lon_ch[18]
-    # lat_ch <- chunks_ind$lat_ch[18]
+    # r <- chunks_ind$r[48]
+    # lon_ch <- chunks_ind$lon_ch[48]
+    # lat_ch <- chunks_ind$lat_ch[48]
     
     print(str_glue(" "))
     print(str_glue("PROCESSING TILE {r} / {nrow(chunks_ind)}"))
@@ -318,6 +318,11 @@ for(mod in unique(tb_files$model)){                                             
             as_date() -> d
           
         }
+        
+        # AUS days were 16
+        d %>% 
+          {str_glue("{str_sub(., 1,4)}-{str_sub(.,6,7)}-01")} %>% 
+          as_date() -> d
         
         s %>% 
           st_set_dimensions("time", values = d) -> s
@@ -609,7 +614,27 @@ for(mod in unique(tb_files$model)){                                             
                       proxy = F,
                       ncsub = cbind(start = c(1,1,d_p[1]),
                                     count = c(NA,NA,(d_p[2]-d_p[1]+1)))) %>% 
-                  suppressMessages() %>% 
+                  suppressMessages() -> l_s
+                
+                if(dom == "AUS"){
+                  l_s %>% 
+                    map(function(s){
+                      
+                      st_get_dimension_values(s, "lon") -> dim_l
+                      
+                      if(all(dim_l <= 0)){
+                        s %>% 
+                          st_set_dimensions("lon",
+                                            values = st_get_dimension_values(s, "lon", center = F) + 360) %>% 
+                          st_set_crs(4326) -> s
+                      }
+                      
+                      return(s)
+                      
+                    }) -> l_s
+                }
+                
+                l_s %>% 
                   map(as, "SpatRaster") %>%
                   do.call(terra::merge, .)
                 
