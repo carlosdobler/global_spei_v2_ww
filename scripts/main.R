@@ -1,5 +1,5 @@
 
-dom <- c("AFR", "AUS", "CAM", "CAS", "EAS", "EUR", "NAM", "SAM", "SEA", "WAS")[8]
+dom <- c("AFR", "AUS", "CAM", "CAS", "EAS", "EUR", "NAM", "SAM", "SEA", "WAS")[6]
 
 
 # source("~/00-mount.R")
@@ -75,8 +75,8 @@ vars <- c("hurs", "rsds", "sfcWind", "tasmax", "tasmin", "pr") %>% set_names()
   
 }
 
-# tb_files %>% group_by(model) %>% summarise(min(t_i))
-# tb_files %>% group_by(model) %>% summarise(max(t_f))
+tb_files %>% group_by(model) %>% summarise(min(t_i))
+tb_files %>% group_by(model) %>% summarise(max(t_f))
 
 
 # OROGRAPHY
@@ -160,13 +160,10 @@ tisr_era_monthly_mean %>%
 
 
 # REFERENCE GRID
-str_glue("~/bucket_mine/remo/monthly/{dom}-22/") %>% 
-  list.dirs(recursive = F) %>% 
-  .[1] %>% 
-  list.files(full.names = T) %>% 
-  .[str_detect(., "regrid")] %>% 
-  .[str_detect(., "cut", negate = T)] %>% 
-  .[1] %>% 
+tb_files %>% 
+  filter(var == "hurs") %>% 
+  .[1,1, drop = T] %>% 
+  {str_glue("~/bucket_mine/remo/monthly/{dom}-22/hurs/{.}")} %>%
   read_ncdf(ncsub = cbind(start = c(1,1,1),
                           count = c(NA,NA,1)),
             make_time = F) %>%
