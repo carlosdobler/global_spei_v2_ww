@@ -1,5 +1,5 @@
 
-dom <- c("AFR", "AUS", "CAM", "CAS", "EAS", "EUR", "NAM", "SAM", "SEA", "WAS")[2]
+dom <- c("AFR", "AUS", "CAM", "CAS", "EAS", "EUR", "NAM", "SAM", "SEA", "WAS")[5]
 
 
 # source("~/00-mount.R")
@@ -118,7 +118,7 @@ tb_files %>% group_by(model) %>% summarise(max(t_f))
 
 readRDS("~/bucket_mine/misc_data/tisr_era_monthly_mean.rds") -> tisr_era_monthly_mean
 
-if(dom == "AUS"){
+if(dom == "AUS" | dom == "EAS"){
   
   tisr_era_monthly_mean %>% 
     slice(longitude, 721:1440) -> tisr_1
@@ -248,9 +248,9 @@ for(mod in unique(tb_files$model)){                                             
   
   pwalk(st_drop_geometry(chunks_ind), function(lon_ch, lat_ch, r, ...){
     
-    # r <- chunks_ind$r[48]
-    # lon_ch <- chunks_ind$lon_ch[48]
-    # lat_ch <- chunks_ind$lat_ch[48]
+    # r <- chunks_ind$r[64]
+    # lon_ch <- chunks_ind$lon_ch[64]
+    # lat_ch <- chunks_ind$lat_ch[64]
     
     print(str_glue(" "))
     print(str_glue("PROCESSING TILE {r} / {nrow(chunks_ind)}"))
@@ -357,7 +357,7 @@ for(mod in unique(tb_files$model)){                                             
         
       }) -> l_s_vars
       
-      if(dom == "AUS" & all(st_get_dimension_values(l_s_vars[[1]], "lon") < 0)){
+      if((dom == "AUS" | dom == "EAS") & all(st_get_dimension_values(l_s_vars[[1]], "lon") < 0)){
         
         l_s_vars %>% 
           map(function(s){
@@ -616,7 +616,7 @@ for(mod in unique(tb_files$model)){                                             
                                     count = c(NA,NA,(d_p[2]-d_p[1]+1)))) %>% 
                   suppressMessages() -> l_s
                 
-                if(dom == "AUS"){
+                if(dom == "AUS" | dom == "EAS"){
                   l_s %>% 
                     map(function(s){
                       
