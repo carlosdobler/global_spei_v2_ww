@@ -179,7 +179,7 @@ tb_files %>%
 
 # MODEL LOOP
 
-for(mod in unique(tb_files$model)){                                                                 # ******************
+for(mod in unique(tb_files$model)[-1]){                                                                 # ******************
   
   print(str_glue(" "))
   print(str_glue("PROCESSING MODEL {mod} ----------"))
@@ -248,23 +248,22 @@ for(mod in unique(tb_files$model)){                                             
   
   pwalk(st_drop_geometry(chunks_ind), function(lon_ch, lat_ch, r, ...){
     
-    # r <- chunks_ind$r[64]
-    # lon_ch <- chunks_ind$lon_ch[64]
-    # lat_ch <- chunks_ind$lat_ch[64]
+    # r <- chunks_ind$r[1]
+    # lon_ch <- chunks_ind$lon_ch[1]
+    # lat_ch <- chunks_ind$lat_ch[1]
     
     print(str_glue(" "))
     print(str_glue("PROCESSING TILE {r} / {nrow(chunks_ind)}"))
     tic(str_glue("DONE W/TILE {r} / {nrow(chunks_ind)}"))
     
     
-    cbind(start = c(lon_chunks[[lon_ch]][1], lat_chunks[[lat_ch]][1], 1),
-          count = c(lon_chunks[[lon_ch]][2] - lon_chunks[[lon_ch]][1]+1,
-                    lat_chunks[[lat_ch]][2] - lat_chunks[[lat_ch]][1]+1,
-                    NA)) -> ncs
-    
     
     # IMPORT FILES ----
     {
+      cbind(start = c(lon_chunks[[lon_ch]][1], lat_chunks[[lat_ch]][1], 1),
+            count = c(lon_chunks[[lon_ch]][2] - lon_chunks[[lon_ch]][1]+1,
+                      lat_chunks[[lat_ch]][2] - lat_chunks[[lat_ch]][1]+1,
+                      NA)) -> ncs
       
       print(str_glue("      Importing vars"))
       tic("          -- everything loaded")
@@ -272,6 +271,15 @@ for(mod in unique(tb_files$model)){                                             
         
         # import
         tic(str_glue("         {var_} done!"))
+        
+        if(dom == "EAS" & var_ == "sfcWind" & str_detect(mod, "RegCM4")){
+          cbind(start = c(lon_chunks[[lon_ch]][1], lat_chunks[[lat_ch]][1],1, 1),
+                count = c(lon_chunks[[lon_ch]][2] - lon_chunks[[lon_ch]][1]+1,
+                          lat_chunks[[lat_ch]][2] - lat_chunks[[lat_ch]][1]+1,
+                          1,
+                          NA)) -> ncs
+        }
+        
         
         tb_files %>%
           filter(model == mod,
@@ -296,6 +304,10 @@ for(mod in unique(tb_files$model)){                                             
           do.call(c, .) %>% 
           setNames("v") -> s
         
+        if(dom == "EAS" & var_ == "sfcWind" & str_detect(mod, "RegCM4")){
+          s %>% adrop() -> s
+        }
+        
         # fix duplicates and dates
         st_get_dimension_values(s, "time") %>% 
           as.character() %>% 
@@ -319,7 +331,7 @@ for(mod in unique(tb_files$model)){                                             
           
         }
         
-        # AUS days were 16
+        # AUS and EAS days were 16
         d %>% 
           {str_glue("{str_sub(., 1,4)}-{str_sub(.,6,7)}-01")} %>% 
           as_date() -> d

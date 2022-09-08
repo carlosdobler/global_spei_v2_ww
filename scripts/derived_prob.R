@@ -22,7 +22,7 @@ thresholds %>%
 
 # ********************
 
-for(dom in (c("AFR", "AUS", "CAM", "CAS", "EAS", "EUR", "NAM", "SAM", "SEA", "WAS")[5])){      # ***************
+for(dom in (c("AFR", "AUS", "CAM", "CAS", "EAS", "EUR", "NAM", "SAM", "SEA", "WAS"))){      # ***************
   
   print(str_glue("********** PROCESSING DOM {dom} **********"))
   
@@ -111,20 +111,20 @@ for(dom in (c("AFR", "AUS", "CAM", "CAS", "EAS", "EUR", "NAM", "SAM", "SEA", "WA
         # PROBABILITY D3 OVER
         {
           fname <- str_glue("~/bucket_mine/results/global_spei_ww/new_derived/spei-{acc}_probabilityD3over_{dom}_{str_split(mod, '_', simplify = T)[,1]}_{mod_sh}_{warm}C.nc")
-          
+
           ss %>%
             st_apply(c(1,2), function(x){
-              
+
               if(all(is.na(x))){
                 NA
               } else {
                 mean(x <= -1.6, na.rm = T)
               }
-              
+
             },
             FUTURE = F,
             .fname = "prob") -> s_f
-          
+
           func_write_nc_notime(s_f,
                                fname)
         }
@@ -141,7 +141,7 @@ for(dom in (c("AFR", "AUS", "CAM", "CAS", "EAS", "EUR", "NAM", "SAM", "SEA", "WA
               if(all(is.na(x))){
                 NA
               } else {
-                mean(x >= 0, na.rm = T)
+                mean(x > -0.5, na.rm = T)
               }
               
             },
@@ -157,20 +157,20 @@ for(dom in (c("AFR", "AUS", "CAM", "CAS", "EAS", "EUR", "NAM", "SAM", "SEA", "WA
         # MEAN
         {
           fname <- str_glue("~/bucket_mine/results/global_spei_ww/new_derived/spei-{acc}_mean_{dom}_{str_split(mod, '_', simplify = T)[,1]}_{mod_sh}_{warm}C.nc")
-          
+
           ss %>%
             st_apply(c(1,2), function(x){
-              
+
               if(all(is.na(x))){
                 NA
               } else {
                 mean(x, na.rm = T)
               }
-              
+
             },
             FUTURE = F,
             .fname = "prob") -> s_f
-          
+
           func_write_nc_notime(s_f,
                                fname)
         }
@@ -180,31 +180,31 @@ for(dom in (c("AFR", "AUS", "CAM", "CAS", "EAS", "EUR", "NAM", "SAM", "SEA", "WA
         # PERCENTILES
         {
           probs = c("0.05", "0.10", "0.50", "0.90", "0.95")
-          
+
           ss %>%
             st_apply(c(1,2), function(x){
-              
+
               if(all(is.na(x))){
                 rep(NA, length(probs))
               } else {
                 quantile(x, prob = as.numeric(probs), na.rm = T)
               }
-              
+
             },
             FUTURE = F,
             .fname = "perc") %>%
             aperm(c(2,3,1)) -> s_f
-          
+
           imap(probs, function(pp, i){
-            
+
             s_f %>%
               slice(perc, i) -> ss_f
-            
+
             fname <- str_glue("~/bucket_mine/results/global_spei_ww/new_derived/spei-{acc}_{str_sub(pp,3)}perc_{dom}_{str_split(mod, '_', simplify = T)[,1]}_{mod_sh}_{warm}C.nc")
-            
+
             func_write_nc_notime(ss_f,
                                  fname)
-            
+
           })
         }
         
